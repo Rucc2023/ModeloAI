@@ -1,72 +1,383 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <h1>hola mundo prueba</h1>
+    <title>AI Vision | Detección en tiempo real</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #94a3b8;
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--dark);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        header {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--gray);
+            font-weight: 300;
+            font-size: 1.1rem;
+        }
+
+        main {
+            flex: 1;
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .camera-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* ESTILOS AJUSTADOS PARA LA CÁMARA */
+        .camera-frame {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        #webcam-container {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            aspect-ratio: 1/1;
+        }
+
+        #webcam-container canvas {
+            width: 100% !important;
+            height: auto !important;
+            max-width: 400px;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .predictions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .prediction-item {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            background-color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .prediction-item:hover {
+            transform: translateX(5px);
+        }
+
+        .prediction-label {
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .prediction-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .confidence-bar {
+            height: 6px;
+            border-radius: 3px;
+            background-color: #e2e8f0;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .confidence-level {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+            }
+        }
+    </style>
 </head>
 <body>
-    <div>Teachable Machine Image Model</div>
-<button type="button" onclick="init()">Start</button>
-<div id="webcam-container"></div>
-<div id="label-container"></div>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-<script type="text/javascript">
-    // More API functions here:
-    // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+    <header>
+        <h1>AI Vision</h1>
+        <p class="subtitle">Detección de objetos en tiempo real</p>
+    </header>
 
-    // the link to your model provided by Teachable Machine export panel
-    const URL_MODELO = "https://teachablemachine.withgoogle.com/models/_iTtquVeLF/";
+    <main>
+        <div class="app-container glass-card" style="padding: 2rem;">
+            <div class="camera-section">
+                <div class="camera-frame">
+                    <div id="webcam-container"></div>
+                </div>
+                <button class="btn btn-primary pulse" onclick="init()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                    Iniciar cámara
+                </button>
+            </div>
 
-    let model, webcam, labelContainer, maxPredictions;
+            <div class="results-section">
+                <h2 class="results-title">Resultados</h2>
+                <div class="predictions-container" id="label-container">
+                    <div class="prediction-item">
+                        <div>
+                            <div class="prediction-label">Esperando activación...</div>
+                            <div class="confidence-bar">
+                                <div class="confidence-level" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="prediction-value">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
-    // Load the image model and setup the webcam
-    async function init() {
-        const modelURL = URL_MODELO + "model.json";
-        const metadataURL = URL_MODELO + "metadata.json";
+    <footer>
+        <p>Powered by Teachable Machine & TensorFlow.js</p>
+    </footer>
 
-        // load the model and metadata
-        // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
-        // or files from your local hard drive
-        // Note: the pose library adds "tmImage" object to your window (window.tmImage)
-        model = await tmImage.load(modelURL, metadataURL);
-        maxPredictions = model.getTotalClasses();
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script type="text/javascript">
+        const URL_MODELO = "https://teachablemachine.withgoogle.com/models/_iTtquVeLF/";
+        let model, webcam, labelContainer, maxPredictions;
+        let isActive = false;
 
-        // Convenience function to setup a webcam
-        const flip = true; // whether to flip the webcam
-        webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
-        await webcam.setup(); // request access to the webcam
-        await webcam.play();
-        window.requestAnimationFrame(loop);
+        async function init() {
+            if (isActive) return;
+            
+            try {
+                const modelURL = URL_MODELO + "model.json";
+                const metadataURL = URL_MODELO + "metadata.json";
 
-        // append elements to the DOM
-        document.getElementById("webcam-container").appendChild(webcam.canvas);
-        labelContainer = document.getElementById("label-container");
-        for (let i = 0; i < maxPredictions; i++) { // and class labels
-            labelContainer.appendChild(document.createElement("div"));
+                // UI feedback
+                const btn = document.querySelector('.btn');
+                btn.classList.remove('pulse');
+                btn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                    </svg>
+                    Cargando modelo...
+                `;
+
+                // Load model
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+
+                // Setup webcam - AJUSTADO AL ESTILO POR DEFECTO
+                webcam = new tmImage.Webcam(400, 400, true); // Tamaño fijo 400x400 como en el original
+                await webcam.setup();
+                await webcam.play();
+                
+                // Update UI
+                isActive = true;
+                btn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <line x1="12" y1="2" x2="12" y2="4"></line>
+                        <line x1="12" y1="20" x2="12" y2="22"></line>
+                        <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line>
+                        <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line>
+                        <line x1="2" y1="12" x2="4" y2="12"></line>
+                        <line x1="20" y1="12" x2="22" y2="12"></line>
+                        <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line>
+                        <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>
+                    </svg>
+                    Cámara activa
+                `;
+
+                // Display webcam - MANTENIENDO EL ESTILO ORIGINAL
+                const webcamContainer = document.getElementById('webcam-container');
+                webcamContainer.innerHTML = ''; // Limpiar contenedor
+                webcamContainer.appendChild(webcam.canvas);
+                
+                // Aplicar estilos al canvas para mantener proporción
+                webcam.canvas.style.width = '100%';
+                webcam.canvas.style.height = 'auto';
+                webcam.canvas.style.maxWidth = '400px';
+                webcam.canvas.style.display = 'block';
+                webcam.canvas.style.margin = '0 auto';
+                
+                // Prepare predictions container
+                labelContainer = document.getElementById('label-container');
+                labelContainer.innerHTML = '';
+                
+                // Start prediction loop
+                window.requestAnimationFrame(loop);
+            } catch (error) {
+                console.error(error);
+                labelContainer.innerHTML = `
+                    <div class="prediction-item" style="color: #ef4444;">
+                        Error al cargar el modelo: ${error.message}
+                    </div>
+                `;
+            }
         }
-    }
 
-    async function loop() {
-        webcam.update(); // update the webcam frame
-        await predict();
-        window.requestAnimationFrame(loop);
-    }
-
-    // run the webcam image through the image model
-    async function predict() {
-        // predict can take in an image, video or canvas html element
-        const prediction = await model.predict(webcam.canvas);
-        for (let i = 0; i < maxPredictions; i++) {
-            const classPrediction =
-                prediction[i].className + ": " + prediction[i].probability.toFixed(2);
-            labelContainer.childNodes[i].innerHTML = classPrediction;
+        async function loop() {
+            if (!isActive) return;
+            webcam.update();
+            await predict();
+            window.requestAnimationFrame(loop);
         }
-    }
-</script>
 
-    
+        async function predict() {
+            const prediction = await model.predict(webcam.canvas);
+            prediction.sort((a, b) => b.probability - a.probability);
+            
+            labelContainer.innerHTML = '';
+            
+            for (let i = 0; i < maxPredictions; i++) {
+                const percent = (prediction[i].probability * 100).toFixed(1);
+                
+                const item = document.createElement('div');
+                item.className = 'prediction-item';
+                item.innerHTML = `
+                    <div>
+                        <div class="prediction-label">${prediction[i].className}</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-level" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                    <div class="prediction-value">${percent}%</div>
+                `;
+                
+                labelContainer.appendChild(item);
+            }
+        }
+    </script>
 </body>
 </html>
